@@ -1,18 +1,20 @@
 package com.chaos.ekinomy
 
 import com.chaos.ekinomy.block.ModBlocks
+import com.chaos.ekinomy.command.CommandEkinomy
 import com.chaos.ekinomy.data.PlayerBalanceData
 import com.chaos.ekinomy.handler.EkinomyManager
 import com.chaos.ekinomy.util.config.Config
 import com.chaos.ekinomy.util.nbt.EkinomyLevelData
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.world.server.ServerWorld
+import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.ModLoadingContext
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.config.ModConfig
-import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import thedarkcolour.kotlinforforge.forge.FORGE_BUS
@@ -34,7 +36,7 @@ object Ekinomy {
         FORGE_BUS.addListener(::onWorldLoad)
         FORGE_BUS.addListener(::onWorldSave)
         FORGE_BUS.addListener(::onWorldUnload)
-        FORGE_BUS.addListener(::onServerAboutToStart)
+        FORGE_BUS.addListener(::registerCommands)
     }
 
     private fun onPlayerJoin(event: EntityJoinWorldEvent) {
@@ -75,6 +77,7 @@ object Ekinomy {
         }
     }
 
-    private fun onServerAboutToStart(event: FMLServerAboutToStartEvent) {
+    private fun registerCommands(event: RegisterCommandsEvent) {
+        CommandEkinomy.register(event.dispatcher)
     }
 }
