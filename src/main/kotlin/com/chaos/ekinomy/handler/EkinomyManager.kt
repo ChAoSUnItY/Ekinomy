@@ -2,6 +2,8 @@ package com.chaos.ekinomy.handler
 
 import com.chaos.ekinomy.data.OperationType
 import com.chaos.ekinomy.data.PlayerBalanceData
+import com.chaos.ekinomy.util.config.Config
+import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
 internal object EkinomyManager {
@@ -17,6 +19,8 @@ internal object EkinomyManager {
     fun clear() = cache.clear()
 
     fun getBalanceDataCollection(): MutableList<PlayerBalanceData> = cache.toMutableList()
+
+    fun has(entity: PlayerEntity): Boolean = has(entity.name.string).and(has(entity.uniqueID))
 
     fun has(data: PlayerBalanceData): Boolean = has(data.playerName).and(has(data.playerUUID))
 
@@ -39,26 +43,23 @@ internal object EkinomyManager {
                 when (opType) {
                     is OperationType.ADD -> addBalanceByUUID(opType.balance, opType.playerUUID)
                     is OperationType.SET -> setBalanceByUUID(opType.balance, opType.playerUUID)
+                    is OperationType.RESET -> resetBalanceByUUID(opType.playerUUID)
                 }
             }
             opType.playerName != null -> {
                 when (opType) {
                     is OperationType.ADD -> addBalanceByName(opType.balance, opType.playerName)
                     is OperationType.SET -> setBalanceByName(opType.balance, opType.playerName)
+                    is OperationType.RESET -> resetBalanceByName(opType.playerName)
                 }
             }
             else -> false
         }
     }
 
-    fun addBalanceByName(balance: Double, playerName: String? = null): Boolean {
+    fun addBalanceByName(balance: Long, playerName: String? = null): Boolean {
         return when {
-            playerName.isNullOrEmpty() -> {
-                reload(cache.map {
-                    it + balance
-                })
-                true
-            }
+            playerName.isNullOrEmpty() -> false
             playerName.isNotEmpty() -> {
                 if (!has(playerName))
                     false
@@ -66,8 +67,7 @@ internal object EkinomyManager {
                     reload(cache.map {
                         if (it.playerName == playerName)
                             it + balance
-                        else
-                            it
+                        else it
                     })
                     true
                 }
@@ -76,7 +76,7 @@ internal object EkinomyManager {
         }
     }
 
-    fun setBalanceByName(balance: Double, playerName: String? = null): Boolean {
+    fun setBalanceByName(balance: Long, playerName: String? = null): Boolean {
         return when {
             playerName.isNullOrEmpty() -> false
             else -> {
@@ -86,8 +86,7 @@ internal object EkinomyManager {
                     reload(cache.map {
                         if (it.playerName == playerName)
                             PlayerBalanceData(playerName, it.playerUUID, balance)
-                        else
-                            it
+                        else it
                     })
                     true
                 }
@@ -95,14 +94,32 @@ internal object EkinomyManager {
         }
     }
 
-    fun addBalanceByUUID(balance: Double, playerUUID: UUID? = null): Boolean {
-        return when (playerUUID) {
-            null -> {
+    fun resetBalanceByName(playerName: String? = null): Boolean {
+        return when {
+            playerName.isNullOrEmpty() -> {
                 reload(cache.map {
-                    it + balance
+                    PlayerBalanceData(it.playerName, it.playerUUID, Config.SERVER.initialBalance.get())
                 })
                 true
             }
+            else -> {
+                if (!has(playerName))
+                    false
+                else {
+                    reload(cache.map {
+                        if (it.playerName == playerName)
+                            PlayerBalanceData(playerName, it.playerUUID, Config.SERVER.initialBalance.get())
+                        else it
+                    })
+                    true
+                }
+            }
+        }
+    }
+
+    fun addBalanceByUUID(balance: Long, playerUUID: UUID? = null): Boolean {
+        return when (playerUUID) {
+            null -> false
             else -> {
                 if (!has(playerUUID))
                     false
@@ -110,8 +127,7 @@ internal object EkinomyManager {
                     reload(cache.map {
                         if (it.playerUUID == playerUUID)
                             it + balance
-                        else
-                            it
+                        else it
                     })
                     true
                 }
@@ -119,7 +135,7 @@ internal object EkinomyManager {
         }
     }
 
-    fun setBalanceByUUID(balance: Double, playerUUID: UUID? = null): Boolean {
+    fun setBalanceByUUID(balance: Long, playerUUID: UUID? = null): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
@@ -129,8 +145,25 @@ internal object EkinomyManager {
                     reload(cache.map {
                         if (it.playerUUID == playerUUID)
                             PlayerBalanceData(it.playerName, playerUUID, balance)
-                        else
-                            it
+                        else it
+                    })
+                    true
+                }
+            }
+        }
+    }
+
+    fun resetBalanceByUUID(playerUUID: UUID? = null): Boolean {
+        return when (playerUUID) {
+            null -> false
+            else -> {
+                if (!has(playerUUID))
+                    false
+                else {
+                    reload(cache.map {
+                        if (it.playerUUID == playerUUID)
+                            PlayerBalanceData(it.playerName, playerUUID, Config.SERVER.initialBalance.get())
+                        else it
                     })
                     true
                 }

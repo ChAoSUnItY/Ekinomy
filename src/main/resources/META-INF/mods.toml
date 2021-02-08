@@ -1,0 +1,13 @@
+modLoader="kotlinforforge"
+loaderVersion="[1.6,)"
+license='MIT'
+
+[[mods]]
+modId="ekinomy"
+version="${file.jarVersion}"
+displayName="Ekinomy"
+credits=""
+authors="ChAoS-UnItY"
+description='''
+
+'''
