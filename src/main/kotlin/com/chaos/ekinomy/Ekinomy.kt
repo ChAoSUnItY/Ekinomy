@@ -2,11 +2,12 @@ package com.chaos.ekinomy
 
 import com.chaos.ekinomy.block.ModBlocks
 import com.chaos.ekinomy.command.CommandEkinomy
-import com.chaos.ekinomy.data.PlayerBalanceData
 import com.chaos.ekinomy.handler.EkinomyManager
+import com.chaos.ekinomy.handler.PacketManager
 import com.chaos.ekinomy.util.config.Config
 import com.chaos.ekinomy.util.nbt.EkinomyLevelData
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.World
 import net.minecraft.world.server.ServerWorld
 import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
@@ -14,7 +15,7 @@ import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.ModLoadingContext
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.config.ModConfig
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import thedarkcolour.kotlinforforge.forge.FORGE_BUS
@@ -32,6 +33,8 @@ object Ekinomy {
 
         ModBlocks.REGISTRY.register(MOD_BUS)
 
+        MOD_BUS.addListener(::setup)
+
         FORGE_BUS.addListener(::onPlayerJoin)
         FORGE_BUS.addListener(::onWorldLoad)
         FORGE_BUS.addListener(::onWorldSave)
@@ -39,22 +42,21 @@ object Ekinomy {
         FORGE_BUS.addListener(::registerCommands)
     }
 
+    private fun setup(event: FMLCommonSetupEvent) {
+        PacketManager.init()
+    }
+
     private fun onPlayerJoin(event: EntityJoinWorldEvent) {
         val entity = event.entity
 
-        if (entity is PlayerEntity)
-            if (!EkinomyManager.has(entity))
-                EkinomyManager.addData(
-                    PlayerBalanceData(
-                        entity.name.string,
-                        entity.uniqueID,
-                        Config.SERVER.initialBalance.get()
-                    )
-                )
+        if (entity is PlayerEntity && !entity.world.isRemote)
+            EkinomyManager.getDataOrCreate(entity)
     }
 
     private fun onWorldLoad(event: WorldEvent.Load) {
-        if (!event.world.isRemote && event.world is ServerWorld) {
+        val world = event.world
+
+        if (!world.isRemote && world is ServerWorld && world.dimensionKey == World.OVERWORLD) {
             val saver = EkinomyLevelData.getLevelData(event.world as ServerWorld)
 
             EkinomyManager.init(saver.dataCollection)
@@ -62,7 +64,9 @@ object Ekinomy {
     }
 
     private fun onWorldSave(event: WorldEvent.Save) {
-        if (!event.world.isRemote && event.world is ServerWorld) {
+        val world = event.world
+
+        if (!world.isRemote && world is ServerWorld && world.dimensionKey == World.OVERWORLD) {
             val saver = EkinomyLevelData.getLevelData(event.world as ServerWorld)
             saver.dataCollection = EkinomyManager.getBalanceDataCollection()
             saver.markDirty()
@@ -70,7 +74,9 @@ object Ekinomy {
     }
 
     private fun onWorldUnload(event: WorldEvent.Unload) {
-        if (!event.world.isRemote && event.world is ServerWorld) {
+        val world = event.world
+
+        if (!world.isRemote && world is ServerWorld && world.dimensionKey == World.OVERWORLD) {
             val saver = EkinomyLevelData.getLevelData(event.world as ServerWorld)
             saver.dataCollection = EkinomyManager.getBalanceDataCollection()
             saver.markDirty()

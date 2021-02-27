@@ -6,8 +6,8 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21"
-        classpath "org.jetbrains.kotlin:kotlin-serialization:1.4.21"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.31"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:1.4.31"
     }
 }
 apply plugin: 'net.minecraftforge.gradle'

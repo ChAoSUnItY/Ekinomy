@@ -2,176 +2,155 @@ package com.chaos.ekinomy.handler
 
 import com.chaos.ekinomy.data.OperationType
 import com.chaos.ekinomy.data.PlayerBalanceData
+import com.chaos.ekinomy.data.PlayerCachedData
 import com.chaos.ekinomy.util.config.Config
 import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
 internal object EkinomyManager {
-    private val cache: MutableList<PlayerBalanceData> = mutableListOf()
+    private val cache: MutableList<PlayerCachedData> = mutableListOf()
 
-    fun init(dataCollection: List<PlayerBalanceData>) = this.cache.addAll(cache)
-
-    fun reload(dataCollection: List<PlayerBalanceData>) {
+    internal fun init(dataCollection: List<PlayerBalanceData>) {
         clear()
+
+        val cachedData = dataCollection.map(PlayerBalanceData::asCachedData)
+
+        cache.addAll(cachedData)
+    }
+
+    internal fun reload(dataCollection: List<PlayerBalanceData>) {
         init(dataCollection)
     }
 
-    fun clear() = cache.clear()
+    private fun clear() = cache.clear()
 
-    fun getBalanceDataCollection(): MutableList<PlayerBalanceData> = cache.toMutableList()
+    internal fun getBalanceDataCollection(): MutableList<PlayerBalanceData> =
+        cache.map(PlayerCachedData::asBalanceData).toMutableList()
 
-    fun has(entity: PlayerEntity): Boolean = has(entity.name.string).and(has(entity.uniqueID))
+    internal fun has(entity: PlayerEntity): Boolean = has(entity.uniqueID)
 
-    fun has(data: PlayerBalanceData): Boolean = has(data.playerName).and(has(data.playerUUID))
+    internal fun has(playerUUID: UUID): Boolean = cache.find { it.playerUUID == playerUUID } != null
 
-    fun has(playerName: String): Boolean = has { it.playerName == playerName }
+    internal fun getDataIndex(playerUUID: UUID): Int = cache.indexOfFirst { it.playerUUID == playerUUID }
 
-    fun has(playerUUID: UUID): Boolean = has { it.playerUUID == playerUUID }
+    internal fun replaceData(playerUUID: UUID, cachedData: PlayerCachedData): Boolean {
+        val index = getDataIndex(playerUUID)
 
-    private inline fun has(crossinline predicate: (PlayerBalanceData) -> Boolean): Boolean =
-        cache.any { predicate.invoke(it) }
-
-    fun addData(data: PlayerBalanceData): Boolean =
-        if (has(data))
+        return if (index == -1)
             false
-        else
-            cache.add(data)
-
-    fun operate(opType: OperationType): Boolean {
-        return when {
-            opType.playerUUID != null -> {
-                when (opType) {
-                    is OperationType.ADD -> addBalanceByUUID(opType.balance, opType.playerUUID)
-                    is OperationType.SET -> setBalanceByUUID(opType.balance, opType.playerUUID)
-                    is OperationType.RESET -> resetBalanceByUUID(opType.playerUUID)
-                }
-            }
-            opType.playerName != null -> {
-                when (opType) {
-                    is OperationType.ADD -> addBalanceByName(opType.balance, opType.playerName)
-                    is OperationType.SET -> setBalanceByName(opType.balance, opType.playerName)
-                    is OperationType.RESET -> resetBalanceByName(opType.playerName)
-                }
-            }
-            else -> false
+        else {
+            cache[index] = cachedData
+            true
         }
     }
 
-    fun addBalanceByName(balance: Long, playerName: String? = null): Boolean {
-        return when {
-            playerName.isNullOrEmpty() -> false
-            playerName.isNotEmpty() -> {
-                if (!has(playerName))
-                    false
-                else {
-                    reload(cache.map {
-                        if (it.playerName == playerName)
-                            it + balance
-                        else it
-                    })
-                    true
-                }
-            }
-            else -> false
+    internal fun operate(opType: OperationType): Boolean {
+        return when (opType) {
+            is OperationType.ADD -> addBalance(opType.balance, opType.playerUUID)
+            is OperationType.SUB -> subBalance(opType.balance, opType.playerUUID)
+            is OperationType.PAY -> payBalance(opType.balance, opType.playerUUID, opType.targetPlayerUUID)
+            is OperationType.SET -> setBalance(opType.balance, opType.playerUUID)
+            is OperationType.RESET -> resetBalance(opType.playerUUID)
         }
     }
 
-    fun setBalanceByName(balance: Long, playerName: String? = null): Boolean {
-        return when {
-            playerName.isNullOrEmpty() -> false
-            else -> {
-                if (!has(playerName))
-                    false
-                else {
-                    reload(cache.map {
-                        if (it.playerName == playerName)
-                            PlayerBalanceData(playerName, it.playerUUID, balance)
-                        else it
-                    })
-                    true
-                }
-            }
-        }
-    }
-
-    fun resetBalanceByName(playerName: String? = null): Boolean {
-        return when {
-            playerName.isNullOrEmpty() -> {
-                reload(cache.map {
-                    PlayerBalanceData(it.playerName, it.playerUUID, Config.SERVER.initialBalance.get())
-                })
-                true
-            }
-            else -> {
-                if (!has(playerName))
-                    false
-                else {
-                    reload(cache.map {
-                        if (it.playerName == playerName)
-                            PlayerBalanceData(playerName, it.playerUUID, Config.SERVER.initialBalance.get())
-                        else it
-                    })
-                    true
-                }
-            }
-        }
-    }
-
-    fun addBalanceByUUID(balance: Long, playerUUID: UUID? = null): Boolean {
+    internal fun addBalance(balance: Long, playerUUID: UUID? = null): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
                 if (!has(playerUUID))
                     false
                 else {
-                    reload(cache.map {
-                        if (it.playerUUID == playerUUID)
-                            it + balance
-                        else it
-                    })
+                    replaceData(playerUUID, getCachedData(playerUUID)!!.operate(OperationType.ADD(balance, playerUUID)))
                     true
                 }
             }
         }
     }
 
-    fun setBalanceByUUID(balance: Long, playerUUID: UUID? = null): Boolean {
+    internal fun subBalance(balance: Long, playerUUID: UUID? = null): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
                 if (!has(playerUUID))
                     false
                 else {
-                    reload(cache.map {
-                        if (it.playerUUID == playerUUID)
-                            PlayerBalanceData(it.playerName, playerUUID, balance)
-                        else it
-                    })
+                    replaceData(playerUUID, getCachedData(playerUUID)!!.operate(OperationType.SUB(balance, playerUUID)))
                     true
                 }
             }
         }
     }
 
-    fun resetBalanceByUUID(playerUUID: UUID? = null): Boolean {
+    internal fun payBalance(balance: Long, playerUUID: UUID?, targetPlayerUUID: UUID?): Boolean {
+        return when (playerUUID) {
+            null -> false
+            else -> {
+                when (targetPlayerUUID) {
+                    null -> false
+                    else -> {
+                        if (!has(playerUUID) && !has(targetPlayerUUID))
+                            false
+                        else {
+                            if (getDataByUUID(playerUUID)?.balance!! < balance)
+                                false
+                            else {
+                                subBalance(balance, playerUUID)
+                                addBalance(balance, targetPlayerUUID)
+                                true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    internal fun setBalance(balance: Long, playerUUID: UUID? = null): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
                 if (!has(playerUUID))
                     false
                 else {
-                    reload(cache.map {
-                        if (it.playerUUID == playerUUID)
-                            PlayerBalanceData(it.playerName, playerUUID, Config.SERVER.initialBalance.get())
-                        else it
-                    })
+                    replaceData(playerUUID, getCachedData(playerUUID)!!.operate(OperationType.SET(balance, playerUUID)))
                     true
                 }
             }
         }
     }
 
-    fun getDataByName(playerName: String): PlayerBalanceData? = cache.find { it.playerName == playerName }
+    internal fun resetBalance(playerUUID: UUID? = null): Boolean {
+        return when (playerUUID) {
+            null -> false
+            else -> {
+                if (!has(playerUUID))
+                    false
+                else {
+                    replaceData(playerUUID, getCachedData(playerUUID)!!.operate(OperationType.RESET(playerUUID)))
+                    true
+                }
+            }
+        }
+    }
 
-    fun getDataByUUID(playerUUID: UUID): PlayerBalanceData? = cache.find { it.playerUUID == playerUUID }
+    internal fun getCachedData(playerUUID: UUID): PlayerCachedData? =
+        cache.find { it.playerUUID == playerUUID }
+
+    internal fun getDataByUUID(playerUUID: UUID): PlayerBalanceData? =
+        getCachedData(playerUUID)?.asBalanceData()
+
+    internal fun getDataOrCreate(playerEntity: PlayerEntity): PlayerBalanceData =
+        getDataByUUID(playerEntity.uniqueID) ?: createData(
+            playerEntity.name.string,
+            playerEntity.uniqueID
+        )
+
+    private fun createData(playerName: String, playerUUID: UUID): PlayerBalanceData {
+        val newPlayerData = PlayerBalanceData(playerName, playerUUID, Config.SERVER.initialBalance.get())
+
+        cache.add(newPlayerData.asCachedData())
+
+        return newPlayerData
+    }
 }

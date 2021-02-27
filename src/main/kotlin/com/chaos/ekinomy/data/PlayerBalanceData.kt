@@ -12,4 +12,10 @@ data class PlayerBalanceData(val playerName: String, val playerUUID: UUID, var b
     }
 
     operator fun plusAssign(balanceData: PlayerBalanceData) = plusAssign(balanceData.balance)
+
+    fun asCachedData() = PlayerCachedData(
+        playerName,
+        playerUUID,
+        balance
+    )
 }
