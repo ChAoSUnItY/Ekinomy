@@ -2,11 +2,15 @@ package com.chaos.ekinomy
 
 import com.chaos.ekinomy.block.ModBlocks
 import com.chaos.ekinomy.command.CommandEkinomy
+import com.chaos.ekinomy.data.PlayerBalanceData
+import com.chaos.ekinomy.data.PlayerCachedData
 import com.chaos.ekinomy.handler.EkinomyManager
 import com.chaos.ekinomy.handler.PacketManager
 import com.chaos.ekinomy.util.config.Config
 import com.chaos.ekinomy.util.nbt.EkinomyLevelData
+import com.chaos.ekinomy.util.nbt.EkinomyLogLevelData
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.IWorld
 import net.minecraft.world.World
 import net.minecraft.world.server.ServerWorld
 import net.minecraftforge.event.RegisterCommandsEvent
@@ -64,22 +68,22 @@ object Ekinomy {
     }
 
     private fun onWorldSave(event: WorldEvent.Save) {
-        val world = event.world
-
-        if (!world.isRemote && world is ServerWorld && world.dimensionKey == World.OVERWORLD) {
-            val saver = EkinomyLevelData.getLevelData(event.world as ServerWorld)
-            saver.dataCollection = EkinomyManager.getBalanceDataCollection()
-            saver.markDirty()
-        }
+        markDataSaversDirty(event.world)
     }
 
     private fun onWorldUnload(event: WorldEvent.Unload) {
-        val world = event.world
+        markDataSaversDirty(event.world)
+    }
 
+    private fun markDataSaversDirty(world: IWorld) {
         if (!world.isRemote && world is ServerWorld && world.dimensionKey == World.OVERWORLD) {
-            val saver = EkinomyLevelData.getLevelData(event.world as ServerWorld)
-            saver.dataCollection = EkinomyManager.getBalanceDataCollection()
+            val saver = EkinomyLevelData.getLevelData(world)
+            saver.dataCollection = EkinomyManager.getCachedDataCollection()
             saver.markDirty()
+
+            val logSaver = EkinomyLogLevelData.getLevelData(world)
+            logSaver.logs = EkinomyManager.getCachedDataCollection().flatMap(PlayerCachedData::logs).toMutableList()
+            logSaver.markDirty()
         }
     }
 

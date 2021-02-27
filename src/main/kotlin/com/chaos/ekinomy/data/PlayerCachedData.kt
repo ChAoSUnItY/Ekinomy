@@ -4,11 +4,11 @@ import com.chaos.ekinomy.util.config.Config
 import java.util.*
 
 data class PlayerCachedData(
-    val playerName: String,
-    val playerUUID: UUID,
-    var balance: Long,
-    val logs: List<LogBundle> = listOf()
-) {
+    override val playerName: String,
+    override val playerUUID: UUID,
+    override var balance: Long,
+    val logs: MutableList<LogBundle> = mutableListOf()
+) : PlayerData() {
     fun operate(operationType: OperationType): PlayerCachedData {
         when (operationType) {
             is OperationType.ADD ->
@@ -23,6 +23,16 @@ data class PlayerCachedData(
             is OperationType.SUB ->
                 balance -= operationType.balance
         }
+
+        return this
+    }
+
+    fun log(operationType: OperationType): PlayerCachedData =
+        log(LogBundle(operationType, asBalanceData()))
+
+    fun log(LogBundle: LogBundle): PlayerCachedData {
+        if (Config.SERVER.storeLog.get())
+            logs.add(LogBundle)
 
         return this
     }

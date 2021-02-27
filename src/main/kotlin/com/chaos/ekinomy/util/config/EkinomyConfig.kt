@@ -7,6 +7,9 @@ import net.minecraftforge.fml.common.Mod
 @Mod.EventBusSubscriber(modid = Ekinomy.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
     val initialBalance: ForgeConfigSpec.LongValue
+    val storeLog: ForgeConfigSpec.BooleanValue
+    val launchWeb: ForgeConfigSpec.BooleanValue
+    val webPort: ForgeConfigSpec.IntValue
 
     init {
         builder.comment("Ekinomy Config").push(Ekinomy.MODID)
@@ -17,6 +20,27 @@ class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
         ) {
             it.defineInRange("initial_balance", 100, Long.MIN_VALUE, Long.MAX_VALUE)
         } as ForgeConfigSpec.LongValue
+
+        storeLog = makeOption(
+            builder,
+            "This determines whether needs to store log of all economy actions happens on player or not, this option is the prerequisite of online website."
+        ) {
+            it.define("store_log", true)
+        } as ForgeConfigSpec.BooleanValue
+
+        launchWeb = makeOption(
+            builder,
+            "This determines whether online website of ekinomy mod will be launched after server start up or not."
+        ) {
+            it.define("launch_web", true)
+        } as ForgeConfigSpec.BooleanValue
+
+        webPort = makeOption(
+            builder,
+            "This determines what port will online website will be hosted on, launch_web option is prerequisite of this option."
+        ) {
+            it.defineInRange("web_port", 9487, 0, 10000)
+        } as ForgeConfigSpec.IntValue
 
         builder.pop()
     }
