@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'kotlin'
 
-version = '1.0.0'
+version = '0.0.1'
 group = 'com.chaos.ekinomy'
 archivesBaseName = 'Ekinomy'
 
@@ -69,12 +69,15 @@ repositories {
         name = 'Kotlin for Forge'
         url = 'https://thedarkcolour.github.io/KotlinForForge/'
     }
+    mavenCentral()
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.0.10'
 
     fg.deobf(implementation('thedarkcolour:kotlinforforge:1.8.0'))
+    implementation "io.ktor:ktor-server-core:1.5.2"
+    implementation "io.ktor:ktor-server-netty:1.5.2"
 }
 
 compileKotlin {

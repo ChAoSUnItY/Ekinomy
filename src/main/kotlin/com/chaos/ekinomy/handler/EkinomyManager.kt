@@ -10,23 +10,31 @@ import java.util.*
 
 internal object EkinomyManager {
     private val cache: MutableList<PlayerCachedData> = mutableListOf()
+    private val logCache: MutableList<LogBundle> = mutableListOf()
 
-    internal fun init(dataCollection: MutableList<PlayerCachedData>) {
+    internal fun init(dataCollection: MutableList<PlayerCachedData>, logs: MutableList<LogBundle> = mutableListOf()) {
         clear()
 
         cache.addAll(dataCollection)
+        logCache.addAll(logs)
     }
 
-    internal fun reload(dataCollection: MutableList<PlayerCachedData>) =
-        init(dataCollection)
+    internal fun reload(dataCollection: MutableList<PlayerCachedData>, logs: MutableList<LogBundle> = mutableListOf()) =
+        init(dataCollection, logs)
 
-    private fun clear() = cache.clear()
+    private fun clear() {
+        cache.clear()
+        logCache.clear()
+    }
 
     internal fun getCachedDataCollection(): MutableList<PlayerCachedData> =
         cache.toMutableList()
 
     internal fun getBalanceDataCollection(): MutableList<PlayerBalanceData> =
         cache.map(PlayerCachedData::asBalanceData).toMutableList()
+
+    internal fun getPresavedLogCollection(): MutableList<LogBundle> =
+        logCache.toMutableList()
 
     internal fun has(entity: PlayerEntity): Boolean = has(entity.uniqueID)
 

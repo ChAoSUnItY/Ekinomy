@@ -1,14 +1,9 @@
 package com.chaos.ekinomy.handler
 
 import com.chaos.ekinomy.Ekinomy
-import com.chaos.ekinomy.util.networking.PacketAddBalance
-import com.chaos.ekinomy.util.networking.PacketOperationStatus
-import net.minecraft.network.PacketBuffer
 import net.minecraft.util.ResourceLocation
-import net.minecraftforge.fml.network.NetworkEvent
 import net.minecraftforge.fml.network.NetworkRegistry
 import net.minecraftforge.fml.network.simple.SimpleChannel
-import java.util.function.Supplier
 
 object PacketManager {
     private const val PROTOCAL_VERSION = "7"

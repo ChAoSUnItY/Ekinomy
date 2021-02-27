@@ -22,7 +22,11 @@ object NBTHelper {
 
     fun logToCompoundNBT(logBundle: LogBundle): CompoundNBT {
         val nbt = CompoundNBT()
-        nbt.putString(NBTFacts.COMPOUND_LOG_OP_TYPE, logBundle.operationType.type.name)
+        nbt.putString(
+            NBTFacts.COMPOUND_LOG_OP_TYPE,
+            if (logBundle.operationType is OperationType.DATA) logBundle.operationType.targetType.name
+            else logBundle.operationType.type.name
+        )
         nbt.putLong(NBTFacts.COMPOUND_LOG_BALANCE, logBundle.operationType.balance)
         nbt.putUniqueId(NBTFacts.COMPOUND_LOG_PLAYER_UUID, logBundle.operationType.playerUUID)
         nbt.put(NBTFacts.COMPOUND_LOG_DATA, dataToCompoundNBT(logBundle.data))
@@ -37,6 +41,6 @@ object NBTHelper {
                 nbt.getLong(NBTFacts.COMPOUND_LOG_BALANCE),
                 nbt.getUniqueId(NBTFacts.COMPOUND_LOG_PLAYER_UUID)
             ),
-            dataFromCompoundNBT(nbt.getCompound(NBTFacts.COMPOUND_LOG_DATA)) as PlayerBalanceData
+            dataFromCompoundNBT(nbt.getCompound(NBTFacts.COMPOUND_LOG_DATA))
         )
 }

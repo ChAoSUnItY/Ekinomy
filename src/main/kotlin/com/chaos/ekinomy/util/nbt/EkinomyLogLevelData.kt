@@ -26,7 +26,7 @@ class EkinomyLogLevelData(name: String? = null) : WorldSavedData(name ?: "${Ekin
     override fun read(nbt: CompoundNBT) {
         val list = nbt.getList(NBTFacts.EKINOMY_LOG_LEVEL_DATA_LOG_LIST, Constants.NBT.TAG_COMPOUND)
 
-        logs = list.map { it as CompoundNBT }.map(NBTHelper::logFromCompoundNBT).toMutableList()
+        logs.addAll(list.map { it as CompoundNBT }.map(NBTHelper::logFromCompoundNBT))
     }
 
     override fun write(compound: CompoundNBT): CompoundNBT {
