@@ -13,7 +13,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'kotlin'
 
-version = '0.0.2'
+version = '0.0.3'
 group = 'com.chaos.ekinomy'
 archivesBaseName = 'Ekinomy'
 
