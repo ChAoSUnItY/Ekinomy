@@ -33,14 +33,17 @@ internal object EkinomyManager {
     internal fun getBalanceDataCollection(): MutableList<PlayerBalanceData> =
         cache.map(PlayerCachedData::asBalanceData).toMutableList()
 
-    internal fun getPresavedLogCollection(): MutableList<LogBundle> =
+    internal fun getAllLogCollection(): List<LogBundle> =
+        getPresavedLogCollection() + cache.flatMap(PlayerCachedData::logs)
+
+    internal fun getPresavedLogCollection(): List<LogBundle> =
         logCache.toMutableList()
 
     internal fun has(entity: PlayerEntity): Boolean = has(entity.uniqueID)
 
     internal fun has(playerUUID: UUID): Boolean = cache.find { it.playerUUID == playerUUID } != null
 
-    internal fun getDataIndex(playerUUID: UUID): Int = cache.indexOfFirst { it.playerUUID == playerUUID }
+    private fun getDataIndex(playerUUID: UUID): Int = cache.indexOfFirst { it.playerUUID == playerUUID }
 
     internal fun replaceData(playerUUID: UUID, cachedData: PlayerCachedData): Boolean {
         val index = getDataIndex(playerUUID)
@@ -53,7 +56,7 @@ internal object EkinomyManager {
         }
     }
 
-    internal fun logToCachedData(operationType: OperationType, playerUUID: UUID) {
+    private fun logToCachedData(operationType: OperationType, playerUUID: UUID) {
         val cachedData = getCachedData(playerUUID)
         val balanceData = cachedData?.asBalanceData()
 
@@ -70,11 +73,11 @@ internal object EkinomyManager {
             is OperationType.SUB -> subBalance(opType, opType.playerUUID)
             is OperationType.PAY -> payBalance(opType, opType.playerUUID, opType.targetPlayerUUID)
             is OperationType.SET -> setBalance(opType, opType.playerUUID)
-            is OperationType.RESET -> resetBalance(opType)
+            is OperationType.RESET -> resetBalance(opType, opType.playerUUID)
         }
     }
 
-    internal fun addBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
+    private fun addBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
@@ -82,7 +85,8 @@ internal object EkinomyManager {
                     false
                 else {
                     replaceData(playerUUID, getCachedData(playerUUID)!!.operate(opType))
-                    logToCachedData(opType, playerUUID)
+                    if (log)
+                        logToCachedData(opType, playerUUID)
 
                     true
                 }
@@ -90,7 +94,7 @@ internal object EkinomyManager {
         }
     }
 
-    internal fun subBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
+    private fun subBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
@@ -98,7 +102,8 @@ internal object EkinomyManager {
                     false
                 else {
                     replaceData(playerUUID, getCachedData(playerUUID)!!.operate(opType))
-                    logToCachedData(opType, playerUUID)
+                    if (log)
+                        logToCachedData(opType, playerUUID)
 
                     true
                 }
@@ -106,7 +111,7 @@ internal object EkinomyManager {
         }
     }
 
-    internal fun payBalance(
+    private fun payBalance(
         opType: OperationType,
         playerUUID: UUID?,
         targetPlayerUUID: UUID?,
@@ -126,7 +131,8 @@ internal object EkinomyManager {
                             else {
                                 subBalance(opType, playerUUID, log = false)
                                 addBalance(opType, targetPlayerUUID, log = false)
-                                logToCachedData(opType, playerUUID)
+                                if (log)
+                                    logToCachedData(opType, playerUUID)
 
                                 true
                             }
@@ -137,7 +143,7 @@ internal object EkinomyManager {
         }
     }
 
-    internal fun setBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
+    private fun setBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
@@ -145,7 +151,8 @@ internal object EkinomyManager {
                     false
                 else {
                     replaceData(playerUUID, getCachedData(playerUUID)!!.operate(opType))
-                    logToCachedData(opType, playerUUID)
+                    if (log)
+                        logToCachedData(opType, playerUUID)
 
                     true
                 }
@@ -153,7 +160,7 @@ internal object EkinomyManager {
         }
     }
 
-    internal fun resetBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
+    private fun resetBalance(opType: OperationType, playerUUID: UUID? = null, log: Boolean = true): Boolean {
         return when (playerUUID) {
             null -> false
             else -> {
@@ -161,7 +168,8 @@ internal object EkinomyManager {
                     false
                 else {
                     replaceData(playerUUID, getCachedData(playerUUID)!!.operate(opType))
-                    logToCachedData(opType, playerUUID)
+                    if (log)
+                        logToCachedData(opType, playerUUID)
 
                     true
                 }

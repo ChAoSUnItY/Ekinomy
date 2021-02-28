@@ -2,7 +2,6 @@ package com.chaos.ekinomy
 
 import com.chaos.ekinomy.block.ModBlocks
 import com.chaos.ekinomy.command.CommandEkinomy
-import com.chaos.ekinomy.data.PlayerBalanceData
 import com.chaos.ekinomy.data.PlayerCachedData
 import com.chaos.ekinomy.handler.EkinomyManager
 import com.chaos.ekinomy.handler.PacketManager
@@ -101,7 +100,8 @@ object Ekinomy {
             saver.markDirty()
 
             val logSaver = EkinomyLogLevelData.getLevelData(world)
-            logSaver.logs = EkinomyManager.getCachedDataCollection().flatMap(PlayerCachedData::logs).plus(EkinomyManager.getPresavedLogCollection()).toMutableList()
+            logSaver.logs = EkinomyManager.getCachedDataCollection().flatMap(PlayerCachedData::logs)
+                .plus(EkinomyManager.getPresavedLogCollection()).toMutableList()
             logSaver.markDirty()
         }
     }

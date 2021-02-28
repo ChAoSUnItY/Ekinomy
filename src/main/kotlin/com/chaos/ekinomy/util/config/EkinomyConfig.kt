@@ -25,14 +25,14 @@ class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
             builder,
             "This determines whether needs to store log of all economy actions happens on player or not, this option is the prerequisite of online website."
         ) {
-            it.define("store_log", true)
+            it.define("store_log", false)
         } as ForgeConfigSpec.BooleanValue
 
         launchWeb = makeOption(
             builder,
             "This determines whether online website of ekinomy mod will be launched after server start up or not."
         ) {
-            it.define("launch_web", true)
+            it.define("launch_web", false)
         } as ForgeConfigSpec.BooleanValue
 
         webPort = makeOption(

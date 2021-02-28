@@ -20,6 +20,11 @@ object EkinomyDashboard {
                     get("/") {
                         call.respondHtmlTemplate(MainPage()) {}
                     }
+
+                    get("/log") {
+                        call.respondHtmlTemplate(LogPage()) {}
+                    }
+
                     get("/main.css") {
                         call.respondCss {
                             body {
@@ -38,6 +43,10 @@ object EkinomyDashboard {
                             rule("table, td") {
                                 border = "3px solid #333"
                                 maxWidth = 80.pct
+                            }
+
+                            rule("article") {
+                                marginTop = 20.px
                             }
 
                             rule("table") {
