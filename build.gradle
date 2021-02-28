@@ -70,6 +70,7 @@ repositories {
         url = 'https://thedarkcolour.github.io/KotlinForForge/'
     }
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -78,6 +79,8 @@ dependencies {
     fg.deobf(implementation('thedarkcolour:kotlinforforge:1.8.0'))
     implementation "io.ktor:ktor-server-core:1.5.2"
     implementation "io.ktor:ktor-server-netty:1.5.2"
+    implementation "io.ktor:ktor-html-builder:1.5.2"
+    implementation "org.jetbrains:kotlin-css-jvm:1.0.0-pre.148-kotlin-1.4.21"
 }
 
 compileKotlin {

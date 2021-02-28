@@ -34,6 +34,7 @@ object Ekinomy {
     const val MODNAME = "Ekinomy"
 
     val LOGGER: Logger = LogManager.getLogger(MODNAME)
+    lateinit var dashboard: EkinomyDashboard
 
     init {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SERVER_SPEC)
@@ -43,6 +44,8 @@ object Ekinomy {
         MOD_BUS.addListener(::setup)
 
         FORGE_BUS.addListener(::onPlayerJoin)
+        FORGE_BUS.addListener(::onServerStart)
+        FORGE_BUS.addListener(::onServerStop)
         FORGE_BUS.addListener(::onWorldLoad)
         FORGE_BUS.addListener(::onWorldSave)
         FORGE_BUS.addListener(::onWorldUnload)
@@ -61,12 +64,15 @@ object Ekinomy {
     }
 
     private fun onServerStart(event: FMLServerStartingEvent) {
-        if (Config.SERVER.launchWeb.get())
+        if (Config.SERVER.launchWeb.get()) {
             EkinomyDashboard.init()
+        }
     }
 
     private fun onServerStop(event: FMLServerStoppingEvent) {
-
+        if (Config.SERVER.launchWeb.get()) {
+            EkinomyDashboard.stop()
+        }
     }
 
     private fun onWorldLoad(event: WorldEvent.Load) {
