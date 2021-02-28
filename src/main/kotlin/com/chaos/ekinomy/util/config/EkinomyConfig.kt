@@ -7,6 +7,9 @@ import net.minecraftforge.fml.common.Mod
 @Mod.EventBusSubscriber(modid = Ekinomy.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
     val initialBalance: ForgeConfigSpec.LongValue
+    val mobKillReward: ForgeConfigSpec.LongValue
+    val playerKilledPenalty: ForgeConfigSpec.LongValue
+
     val storeLog: ForgeConfigSpec.BooleanValue
     val launchWeb: ForgeConfigSpec.BooleanValue
     val webPort: ForgeConfigSpec.IntValue
@@ -14,12 +17,31 @@ class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
     init {
         builder.comment("Ekinomy Config").push(Ekinomy.MODID)
 
+        builder.push("economy")
+
         initialBalance = makeOption(
             builder,
-            "This sets the initial balance for new players and the target balance for command /ekinomy reset <player>.\nThe default value is 100.00.",
+            "This sets the initial balance for new players and the target balance for command /ekinomy reset <player>.\nThe default value is 100.",
         ) {
-            it.defineInRange("initial_balance", 100, Long.MIN_VALUE, Long.MAX_VALUE)
+            it.defineInRange("initial_balance", 100, 0, Long.MAX_VALUE)
         } as ForgeConfigSpec.LongValue
+
+        mobKillReward = makeOption(
+            builder,
+            "This defines how much money will be dropped from killing a hostile mob.\nThe default value is 50."
+        ) {
+            it.defineInRange("mob_kill_reward", 50, 0, Long.MAX_VALUE)
+        } as ForgeConfigSpec.LongValue
+
+        playerKilledPenalty = makeOption(
+            builder,
+            "this defines how much money will be lost when a player is killed by another player.\nThe default value is 50."
+        ) {
+            it.defineInRange("player_killed_penalty", 50, 0, Long.MAX_VALUE)
+        } as ForgeConfigSpec.LongValue
+
+        builder.pop()
+        builder.push("website")
 
         storeLog = makeOption(
             builder,
@@ -42,6 +64,7 @@ class EkinomyConfig(builder: ForgeConfigSpec.Builder) {
             it.defineInRange("web_port", 9487, 0, 10000)
         } as ForgeConfigSpec.IntValue
 
+        builder.pop()
         builder.pop()
     }
 

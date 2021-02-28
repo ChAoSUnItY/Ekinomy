@@ -1,6 +1,7 @@
 package com.chaos.ekinomy.handler
 
 import com.chaos.ekinomy.Ekinomy
+import com.chaos.ekinomy.util.networking.ExecuteOperationPacket
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.fml.network.NetworkRegistry
 import net.minecraftforge.fml.network.simple.SimpleChannel
@@ -15,12 +16,15 @@ object PacketManager {
         { PROTOCAL_VERSION == it }
     )
 
-    @JvmStatic
     fun init() {
         var id = 0
 
-        Ekinomy.LOGGER.info("packet init here")
-
-
+        INSTANCE.registerMessage(
+            id++,
+            ExecuteOperationPacket::class.java,
+            ExecuteOperationPacket.Companion::encode,
+            ExecuteOperationPacket.Companion::decode,
+            ExecuteOperationPacket.Companion::handle
+        )
     }
 }

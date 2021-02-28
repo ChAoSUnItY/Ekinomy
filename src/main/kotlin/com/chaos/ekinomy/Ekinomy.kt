@@ -1,7 +1,7 @@
 package com.chaos.ekinomy
 
-import com.chaos.ekinomy.block.ModBlocks
 import com.chaos.ekinomy.command.CommandEkinomy
+import com.chaos.ekinomy.data.OperationType
 import com.chaos.ekinomy.data.PlayerCachedData
 import com.chaos.ekinomy.handler.EkinomyManager
 import com.chaos.ekinomy.handler.PacketManager
@@ -9,12 +9,15 @@ import com.chaos.ekinomy.util.config.Config
 import com.chaos.ekinomy.util.nbt.EkinomyLevelData
 import com.chaos.ekinomy.util.nbt.EkinomyLogLevelData
 import com.chaos.ekinomy.web.EkinomyDashboard
+import net.minecraft.entity.monster.IMob
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.ServerPlayerEntity
 import net.minecraft.world.IWorld
 import net.minecraft.world.World
 import net.minecraft.world.server.ServerWorld
 import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
+import net.minecraftforge.event.entity.living.LivingDeathEvent
 import net.minecraftforge.event.world.WorldEvent
 import net.minecraftforge.fml.ModLoadingContext
 import net.minecraftforge.fml.common.Mod
@@ -38,10 +41,9 @@ object Ekinomy {
     init {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SERVER_SPEC)
 
-        ModBlocks.REGISTRY.register(MOD_BUS)
-
         MOD_BUS.addListener(::setup)
 
+        FORGE_BUS.addListener(::onLivingDeath)
         FORGE_BUS.addListener(::onPlayerJoin)
         FORGE_BUS.addListener(::onServerStart)
         FORGE_BUS.addListener(::onServerStop)
@@ -53,6 +55,35 @@ object Ekinomy {
 
     private fun setup(event: FMLCommonSetupEvent) {
         PacketManager.init()
+    }
+
+    private fun onLivingDeath(event: LivingDeathEvent) {
+        if (!event.entity.world.isRemote) {
+            if (Config.SERVER.mobKillReward.get() == 0L ||
+                Config.SERVER.playerKilledPenalty.get() == 0L
+            ) return
+
+            val killed = event.entity
+            val killer = event.source.trueSource
+
+            if (killer is ServerPlayerEntity)
+                if (killed is ServerPlayerEntity) {
+                    EkinomyManager.operate(
+                        OperationType.PAY(
+                            Config.SERVER.playerKilledPenalty.get(),
+                            killed.uniqueID,
+                            killer.uniqueID
+                        )
+                    )
+                } else if (killed is IMob) {
+                    EkinomyManager.operate(
+                        OperationType.ADD(
+                            Config.SERVER.mobKillReward.get(),
+                            killer.uniqueID
+                        )
+                    )
+                }
+        }
     }
 
     private fun onPlayerJoin(event: EntityJoinWorldEvent) {
