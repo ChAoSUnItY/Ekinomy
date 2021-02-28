@@ -6,6 +6,7 @@ license='MIT'
 modId="ekinomy"
 version="${file.jarVersion}"
 displayName="Ekinomy"
+logoFile="Ekinomy_Logo.png"
 credits=""
 authors="ChAoS-UnItY"
 description='''
